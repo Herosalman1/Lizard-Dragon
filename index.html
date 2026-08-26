@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1024, initial-scale=0.35, maximum-scale=0.35, user-scalable=no">
     <title>Reptile Interactive Cursor</title>
     <style>
         html, body {
@@ -12,6 +12,10 @@
             height: 100%;
             background-color: black;
             overflow: hidden;
+            position: fixed;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
@@ -58,6 +62,26 @@
           Input.mouse.right = false;
         }
       });
+      
+      // Touch support for mobile devices
+      function updateTouchPos(e) {
+        if (e.touches.length > 0) {
+          Input.mouse.x = e.touches[0].clientX;
+          Input.mouse.y = e.touches[0].clientY;
+        }
+      }
+      document.addEventListener("touchstart", function(e) {
+        Input.mouse.left = true;
+        updateTouchPos(e);
+      }, { passive: false });
+      document.addEventListener("touchend", function(e) {
+        Input.mouse.left = false;
+      }, { passive: false });
+      document.addEventListener("touchmove", function(e) {
+        e.preventDefault();
+        updateTouchPos(e);
+      }, { passive: false });
+
       document.addEventListener("mousemove", function(event) {
         Input.mouse.x = event.clientX;
         Input.mouse.y = event.clientY;
@@ -358,7 +382,7 @@
           window.innerWidth / 2,
           window.innerHeight / 2,
           0,
-          s * 22, // Speed aur zyada fast kar di gayi hai
+          s * 22,
           s * 1.5,
           0.4,
           10,
@@ -399,7 +423,6 @@
             new LegSystem(node, 3, s * 20, critter, 4); 
           }
         }
-        // Pooch (Tail) ko lamba aur proper kar diya gaya hai
         for (var i = 0; i < tail; i++) {
           spinal = new Segment(spinal, s * 4, 0, 3.1415 * 2 / 3, 1.1);
           for (var ii = -1; ii <= 1; ii += 2) {
@@ -418,11 +441,11 @@
       canvas.style.backgroundColor = "black";
       ctx.strokeStyle = "white";
       
-      var legNum = 4; // Standard 4 legs taki ek dum real chipkali jaisi lage
+      var legNum = 4;
       setupLizard(
-        2.2, // Perfect size for screen
+        2.2,
         legNum,
-        25  // Lambi aur sahi pooch ke liye segments badha diye hain
+        25
       );  
     </script>
 </body>
