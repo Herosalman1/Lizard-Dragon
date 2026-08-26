@@ -1,39 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1024, initial-scale=0.35, maximum-scale=0.35, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reptile Interactive Cursor</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: black;
+            width: 100vw;
+            height: 100vh;
+            background-color: #050505;
             overflow: hidden;
             position: fixed;
             touch-action: none;
             -webkit-user-select: none;
             user-select: none;
         }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
     <script>
-    var Input = {
+      var Input = {
         keys: [],
         mouse: {
           left: false,
           right: false,
           middle: false,
-          x: 0,
-          y: 0
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2
         }
       };
+      
       for (var i = 0; i < 230; i++) {
         Input.keys.push(false);
       }
+      
       document.addEventListener("keydown", function(event) {
         Input.keys[event.keyCode] = true;
       });
@@ -41,31 +54,19 @@
         Input.keys[event.keyCode] = false;
       });
       document.addEventListener("mousedown", function(event) {
-        if ((event.button = 0)) {
-          Input.mouse.left = true;
-        }
-        if ((event.button = 1)) {
-          Input.mouse.middle = true;
-        }
-        if ((event.button = 2)) {
-          Input.mouse.right = true;
-        }
+        if (event.button === 0) Input.mouse.left = true;
+        if (event.button === 1) Input.mouse.middle = true;
+        if (event.button === 2) Input.mouse.right = true;
       });
       document.addEventListener("mouseup", function(event) {
-        if ((event.button = 0)) {
-          Input.mouse.left = false;
-        }
-        if ((event.button = 1)) {
-          Input.mouse.middle = false;
-        }
-        if ((event.button = 2)) {
-          Input.mouse.right = false;
-        }
+        if (event.button === 0) Input.mouse.left = false;
+        if (event.button === 1) Input.mouse.middle = false;
+        if (event.button === 2) Input.mouse.right = false;
       });
       
-      // Touch support for mobile devices
       function updateTouchPos(e) {
         if (e.touches.length > 0) {
+          addParticle(e.touches[0].clientX, e.touches[0].clientY);
           Input.mouse.x = e.touches[0].clientX;
           Input.mouse.y = e.touches[0].clientY;
         }
@@ -82,18 +83,34 @@
         updateTouchPos(e);
       }, { passive: false });
 
+      // Glowing Trail Particles Array
+      var particles = [];
+
+      function addParticle(x, y) {
+        particles.push({
+          x: x,
+          y: y,
+          size: Math.random() * 4 + 3,
+          alpha: 1.0,
+          color: `hsl(${Math.random() * 60 + 160}, 100%, 70%)` // Glowing Cyan-Green Dots
+        });
+      }
+
       document.addEventListener("mousemove", function(event) {
+        addParticle(event.clientX, event.clientY);
         Input.mouse.x = event.clientX;
         Input.mouse.y = event.clientY;
       });
       
       var canvas = document.createElement("canvas");
       document.body.appendChild(canvas);
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      canvas.style.position = "absolute";
-      canvas.style.left = "0px";
-      canvas.style.top = "0px";
+      
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
       
       var ctx = canvas.getContext("2d");
       
@@ -432,21 +449,41 @@
             }
           }
         }
-        setInterval(function() {
+
+        function render() {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Render & Update Glowing Particles (Dot Trail)
+          for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.fill();
+
+            p.alpha -= 0.03;
+            p.size *= 0.96;
+
+            if (p.alpha <= 0) {
+              particles.splice(i, 1);
+            }
+          }
+
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1.0;
+          ctx.strokeStyle = "white";
+
           critter.follow(Input.mouse.x, Input.mouse.y);
-        }, 33);
+          requestAnimationFrame(render);
+        }
+
+        render();
       }
       
-      canvas.style.backgroundColor = "black";
-      ctx.strokeStyle = "white";
-      
-      var legNum = 4;
-      setupLizard(
-        2.2,
-        legNum,
-        25
-      );  
+      setupLizard(2.2, 4, 25);  
     </script>
 </body>
 </html>
